@@ -1,0 +1,31 @@
+{
+    "name": "elixir/elixir-classloader",
+    "description": "Component classes loader",
+    "license": "BSD-3-Clause",
+    "keywords": [
+        "elixir",
+        "classloader"
+    ],
+    "homepage": "https://github.com/cedtanghe/elixir-classloader",
+    "require": {
+        "php": ">=5.4"
+    },
+    "require-dev": {
+        "phpunit/PHPUnit": "~4.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Elixir\\ClassLoader\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Elixir\\Test\\ClassLoader\\": "tests/"
+        }
+    },
+    "suggest": {
+        "elixir/elixir-stdlib": "~1.0",
+        "elixir/elixir-cache": "~1.0",
+        "elixir/elixir-session": "~1.0"
+    }
+}
