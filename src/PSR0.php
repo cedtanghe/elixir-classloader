@@ -3,9 +3,7 @@
 namespace Elixir\ClassLoader;
 
 require_once 'LoaderAbstract.php';
-require_once 'CacheableTrait.php';
 
-use Elixir\ClassLoader\CacheableTrait;
 use Elixir\ClassLoader\LoaderAbstract;
 
 /**
@@ -13,8 +11,6 @@ use Elixir\ClassLoader\LoaderAbstract;
  */
 class PSR0 extends LoaderAbstract 
 {
-    use CacheableTrait;
-    
     /**
      * {@inheritdoc}
      */
