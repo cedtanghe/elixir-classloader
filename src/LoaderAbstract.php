@@ -5,11 +5,8 @@ namespace Elixir\ClassLoader;
 require_once 'CacheableInterface.php';
 require_once 'LoaderInterface.php';
 
-use Elixir\Cache\CacheInterface;
 use Elixir\ClassLoader\CacheableInterface;
 use Elixir\ClassLoader\LoaderInterface;
-use Elixir\Session\SessionInterface;
-use Elixir\STDLib\ArrayUtils;
 
 /**
  * @author Cédric Tanghe <ced.tanghe@gmail.com>
@@ -37,7 +34,7 @@ abstract class LoaderAbstract implements LoaderInterface, CacheableInterface
     protected $prefixes = [];
     
     /**
-     * @var CacheInterface|SessionInterface 
+     * @var array|\ArrayAccess
      */
     protected $cache;
     
@@ -52,7 +49,7 @@ abstract class LoaderAbstract implements LoaderInterface, CacheableInterface
     protected $cacheKey;
     
     /**
-     * @return CacheInterface|SessionInterface 
+     * @return array|\ArrayAccess
      */
     public function getCache()
     {
@@ -100,8 +97,8 @@ abstract class LoaderAbstract implements LoaderInterface, CacheableInterface
         $this->cacheVersion = $version;
         $this->cacheKey = $key;
         
-        $data = $this->cache->get($this->cacheKey, []) ?: [];
-        $version = ArrayUtils::get('version', $data);
+        $data = isset($this->cache[$this->cacheKey]) ? $this->cache[$this->cacheKey]: [];
+        $version = isset($data['version']) ? $data['version'] : null;
         
         if (null === $this->cacheVersion || null === $version || $version === $this->cacheVersion)
         {
@@ -111,7 +108,7 @@ abstract class LoaderAbstract implements LoaderInterface, CacheableInterface
             }
             
             $this->classes = array_merge(
-                ArrayUtils::get('classes', $data, []),
+                isset($data['classes']) ? $data['classes'] : [],
                 $this->classes
             );
             
@@ -332,14 +329,11 @@ abstract class LoaderAbstract implements LoaderInterface, CacheableInterface
     {
         if (null !== $this->cache)
         {
-            $this->cache->set(
-                $this->cacheKey, 
-                [
-                    'classes' => $this->classes,
-                    'version' => $this->cacheVersion
-                ]
-            );
-
+            $this->cache[$this->cacheKey] = [
+                'classes' => $this->classes,
+                'version' => $this->cacheVersion
+            ];
+            
             return true;
         }
         
@@ -353,7 +347,7 @@ abstract class LoaderAbstract implements LoaderInterface, CacheableInterface
     {
         if (null !== $this->cache)
         {
-            $this->cache->remove($this->cacheKey);
+            unset($this->cache[$this->cacheKey]);
             return true;
         }
         

@@ -9,18 +9,6 @@
     ],
     "homepage": "https://github.com/cedtanghe/elixir-classloader",
     "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/cedtanghe/elixir-stdlib"
-        },
-        {
-            "type": "vcs",
-            "url": "https://github.com/cedtanghe/elixir-cache"
-        },
-        {
-            "type": "vcs",
-            "url": "https://github.com/cedtanghe/elixir-session"
-        }
     ],
     "require": {
         "php": ">=5.4"
@@ -39,8 +27,5 @@
         }
     },
     "suggest": {
-        "elixir/elixir-stdlib": "*",
-        "elixir/elixir-cache": "*",
-        "elixir/elixir-session": "*"
     }
 }
