@@ -44,6 +44,16 @@ abstract class LoaderAbstract implements LoaderInterface, CacheableInterface
     protected $cacheVersion = null;
     
     /**
+     * @var boolean
+     */
+    protected $cacheLoaded = false;
+    
+    /**
+     * @var array
+     */
+    protected $cacheData = [];
+    
+    /**
      * @var string 
      */
     protected $cacheKey;
@@ -93,12 +103,13 @@ abstract class LoaderAbstract implements LoaderInterface, CacheableInterface
      */
     public function loadFromCache($cache, $version = null, $key = self::DEFAULT_CACHE_KEY)
     {
+        $this->cacheLoaded = true;
         $this->cache = $cache;
         $this->cacheVersion = $version;
         $this->cacheKey = $key;
         
-        $data = isset($this->cache[$this->cacheKey]) ? $this->cache[$this->cacheKey]: [];
-        $version = isset($data['version']) ? $data['version'] : null;
+        $this->cacheData = isset($this->cache[$this->cacheKey]) ? $this->cache[$this->cacheKey]: [];
+        $version = isset($this->cacheData['_version']) ? $this->cacheData['_version'] : null;
         
         if (null === $this->cacheVersion || null === $version || $version === $this->cacheVersion)
         {
@@ -108,7 +119,7 @@ abstract class LoaderAbstract implements LoaderInterface, CacheableInterface
             }
             
             $this->classes = array_merge(
-                isset($data['classes']) ? $data['classes'] : [],
+                isset($this->cacheData['classes']) ? $this->cacheData['classes'] : [],
                 $this->classes
             );
             
@@ -116,6 +127,14 @@ abstract class LoaderAbstract implements LoaderInterface, CacheableInterface
         }
         
         return false;
+    }
+    
+    /**
+     * {@inheritdoc}
+     */
+    public function cacheLoaded()
+    {
+        return $this->cacheLoaded;
     }
     
     /**
@@ -325,13 +344,26 @@ abstract class LoaderAbstract implements LoaderInterface, CacheableInterface
     /**
      * {@inheritdoc}
      */
+    public function isFreshCache()
+    {
+        if (!isset($this->cacheData['classes']))
+        {
+            return false;
+        }
+        
+        return count(array_diff_assoc($this->cacheData['classes'], $this->classes)) === 0;
+    }
+    
+    /**
+     * {@inheritdoc}
+     */
     public function exportToCache()
     {
-        if (null !== $this->cache)
+        if (null !== $this->cache && !$this->isFreshCache())
         {
             $this->cache[$this->cacheKey] = [
                 'classes' => $this->classes,
-                'version' => $this->cacheVersion
+                '_version' => $this->cacheVersion
             ];
             
             return true;
@@ -348,6 +380,10 @@ abstract class LoaderAbstract implements LoaderInterface, CacheableInterface
         if (null !== $this->cache)
         {
             unset($this->cache[$this->cacheKey]);
+            
+            $this->cacheLoaded = false;
+            $this->cacheData = [];
+            
             return true;
         }
         

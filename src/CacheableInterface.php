@@ -23,6 +23,16 @@ interface CacheableInterface
     /**
      * @return boolean
      */
+    public function cacheLoaded();
+    
+    /**
+     * @return boolean
+     */
+    public function isFreshCache();
+    
+    /**
+     * @return boolean
+     */
     public function exportToCache();
     
     /**
