@@ -109,7 +109,7 @@ abstract class LoaderAbstract implements LoaderInterface, CacheableInterface
         $this->cacheKey = $key;
         
         $this->cacheData = isset($this->cache[$this->cacheKey]) ? $this->cache[$this->cacheKey]: [];
-        $version = isset($this->cacheData['_version']) ? $this->cacheData['_version'] : null;
+        $version = isset($this->cacheData['version']) ? $this->cacheData['version'] : null;
         
         if (null === $this->cacheVersion || null === $version || $version === $this->cacheVersion)
         {
@@ -363,7 +363,7 @@ abstract class LoaderAbstract implements LoaderInterface, CacheableInterface
         {
             $this->cache[$this->cacheKey] = [
                 'classes' => $this->classes,
-                '_version' => $this->cacheVersion
+                'version' => $this->cacheVersion
             ];
             
             return true;
