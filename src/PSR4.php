@@ -4,28 +4,26 @@ namespace Elixir\ClassLoader;
 
 require_once 'LoaderAbstract.php';
 
-use Elixir\ClassLoader\LoaderAbstract;
-
 /**
  * @author Cédric Tanghe <ced.tanghe@gmail.com>
  */
-class PSR4 extends LoaderAbstract 
+class PSR4 extends LoaderAbstract
 {
-    public function __construct() 
+    public function __construct()
     {
         $basePath = sprintf(
             '%s%s..%s..%s..%s',
-            __DIR__, 
-            DIRECTORY_SEPARATOR, 
-            DIRECTORY_SEPARATOR, 
-            DIRECTORY_SEPARATOR, 
+            __DIR__,
+            DIRECTORY_SEPARATOR,
+            DIRECTORY_SEPARATOR,
+            DIRECTORY_SEPARATOR,
             DIRECTORY_SEPARATOR
         );
-        
-        $this->addNamespace('Elixir', $basePath . 'framework' . DIRECTORY_SEPARATOR . 'Elixir');
-        $this->addNamespace('Elixir\Module', $basePath . 'modules');
+
+        $this->addNamespace('Elixir', $basePath.'framework'.DIRECTORY_SEPARATOR.'Elixir');
+        $this->addNamespace('Elixir\Module', $basePath.'modules');
     }
-    
+
     /**
      * {@inheritdoc}
      */
@@ -34,22 +32,18 @@ class PSR4 extends LoaderAbstract
         $baseDirs = [''];
         $last = '';
         $class = ltrim($className, '\\');
-        
-        foreach ($this->prefixes as $key => $value)
-        {
+
+        foreach ($this->prefixes as $key => $value) {
             $len = strlen($key);
-            
-            if (strncmp($className, $key, $len) === 0)
-            {
-                if (strcmp($key, $last) > 0)
-                {
+
+            if (strncmp($className, $key, $len) === 0) {
+                if (strcmp($key, $last) > 0) {
                     $last = $key;
 
                     $baseDirs = $value;
                     $class = substr($className, $len + 1);
-                    
-                    if(false === strpos($class, '\\'))
-                    {
+
+                    if (false === strpos($class, '\\')) {
                         break;
                     }
                 }
@@ -58,11 +52,10 @@ class PSR4 extends LoaderAbstract
 
         $paths = [];
 
-        foreach ($baseDirs as $dir)
-        {
-            $paths[] = rtrim($dir, '/\\') . 
-                       DIRECTORY_SEPARATOR . 
-                       str_replace('\\', DIRECTORY_SEPARATOR, $class) . 
+        foreach ($baseDirs as $dir) {
+            $paths[] = rtrim($dir, '/\\').
+                       DIRECTORY_SEPARATOR.
+                       str_replace('\\', DIRECTORY_SEPARATOR, $class).
                        '.php';
         }
 

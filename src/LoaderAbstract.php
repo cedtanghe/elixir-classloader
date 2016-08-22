@@ -5,59 +5,56 @@ namespace Elixir\ClassLoader;
 require_once 'CacheableInterface.php';
 require_once 'LoaderInterface.php';
 
-use Elixir\ClassLoader\CacheableInterface;
-use Elixir\ClassLoader\LoaderInterface;
-
 /**
  * @author Cédric Tanghe <ced.tanghe@gmail.com>
  */
 abstract class LoaderAbstract implements LoaderInterface, CacheableInterface
 {
     /**
-     * @var array 
+     * @var array
      */
     protected $classes = [];
 
     /**
-     * @var array 
+     * @var array
      */
     protected $loaded = [];
 
     /**
-     * @var array 
+     * @var array
      */
     protected $aliases = [];
 
     /**
-     * @var array 
+     * @var array
      */
     protected $prefixes = [];
-    
+
     /**
      * @var array|\ArrayAccess
      */
     protected $cache;
-    
+
     /**
      * @var string|numeric|null
      */
     protected $cacheVersion = null;
-    
+
     /**
-     * @var boolean
+     * @var bool
      */
     protected $cacheLoaded = false;
-    
+
     /**
      * @var array
      */
     protected $cacheData = [];
-    
+
     /**
-     * @var string 
+     * @var string
      */
     protected $cacheKey;
-    
+
     /**
      * @return array|\ArrayAccess
      */
@@ -65,7 +62,7 @@ abstract class LoaderAbstract implements LoaderInterface, CacheableInterface
     {
         return $this->cache;
     }
-    
+
     /**
      * @return string|numeric|null
      */
@@ -73,7 +70,7 @@ abstract class LoaderAbstract implements LoaderInterface, CacheableInterface
     {
         return $this->cacheVersion;
     }
-    
+
     /**
      * @return string
      */
@@ -81,11 +78,11 @@ abstract class LoaderAbstract implements LoaderInterface, CacheableInterface
     {
         return $this->cacheKey;
     }
-    
+
     /**
      * {@inheritdoc}
      */
-    public function register($prepend = false) 
+    public function register($prepend = false)
     {
         spl_autoload_register([$this, 'loadClass'], true, $prepend);
     }
@@ -93,11 +90,11 @@ abstract class LoaderAbstract implements LoaderInterface, CacheableInterface
     /**
      * {@inheritdoc}
      */
-    public function unregister() 
+    public function unregister()
     {
         spl_autoload_unregister([$this, 'loadClass']);
     }
-    
+
     /**
      * {@inheritdoc}
      */
@@ -107,28 +104,26 @@ abstract class LoaderAbstract implements LoaderInterface, CacheableInterface
         $this->cache = $cache;
         $this->cacheVersion = $version;
         $this->cacheKey = $key;
-        
-        $this->cacheData = isset($this->cache[$this->cacheKey]) ? $this->cache[$this->cacheKey]: [];
+
+        $this->cacheData = isset($this->cache[$this->cacheKey]) ? $this->cache[$this->cacheKey] : [];
         $version = isset($this->cacheData['version']) ? $this->cacheData['version'] : null;
-        
-        if (null === $this->cacheVersion || null === $version || $version === $this->cacheVersion)
-        {
-            if (null !== $version)
-            {
+
+        if (null === $this->cacheVersion || null === $version || $version === $this->cacheVersion) {
+            if (null !== $version) {
                 $this->cacheVersion = $version;
             }
-            
+
             $this->classes = array_merge(
                 isset($this->cacheData['classes']) ? $this->cacheData['classes'] : [],
                 $this->classes
             );
-            
+
             return true;
         }
-        
+
         return false;
     }
-    
+
     /**
      * {@inheritdoc}
      */
@@ -136,7 +131,7 @@ abstract class LoaderAbstract implements LoaderInterface, CacheableInterface
     {
         return $this->cacheLoaded;
     }
-    
+
     /**
      * @param string $path
      */
@@ -144,8 +139,7 @@ abstract class LoaderAbstract implements LoaderInterface, CacheableInterface
     {
         $paths = $this->getIncludePaths();
 
-        if (!in_array($path, $paths))
-        {
+        if (!in_array($path, $paths)) {
             $paths[] = rtrim($path, '/\\');
         }
 
@@ -153,13 +147,13 @@ abstract class LoaderAbstract implements LoaderInterface, CacheableInterface
     }
 
     /**
-     * @return array 
+     * @return array
      */
-    public function getIncludePaths() 
+    public function getIncludePaths()
     {
         return explode(PATH_SEPARATOR, get_include_path());
     }
-    
+
     /**
      * @param string $className
      * @param string $path
@@ -168,12 +162,12 @@ abstract class LoaderAbstract implements LoaderInterface, CacheableInterface
     {
         $this->classes[ltrim($className, '\\')] = $path;
     }
-    
+
     /**
      * @param string $className
      * @param string $alias
      */
-    public function alias($className, $alias) 
+    public function alias($className, $alias)
     {
         class_alias($className, $alias);
         $this->aliases[ltrim($alias, '\\')] = ltrim($className, '\\');
@@ -181,89 +175,78 @@ abstract class LoaderAbstract implements LoaderInterface, CacheableInterface
 
     /**
      * @param string $prefix
-     * @param string $baseDir 
-     * @param boolean $prepend 
+     * @param string $baseDir
+     * @param bool   $prepend
      */
     public function addNamespace($prefix, $baseDir, $prepend = false)
     {
         $prefix = rtrim(trim($prefix, '\\'), '_');
-        $baseDir = rtrim($baseDir, '/\\') . DIRECTORY_SEPARATOR;
+        $baseDir = rtrim($baseDir, '/\\').DIRECTORY_SEPARATOR;
 
-        if (!isset($this->prefixes[$prefix])) 
-        {
+        if (!isset($this->prefixes[$prefix])) {
             $this->prefixes[$prefix] = [];
         }
 
-        if ($prepend) 
-        {
+        if ($prepend) {
             array_unshift($this->prefixes[$prefix], $baseDir);
-        } 
-        else 
-        {
+        } else {
             array_push($this->prefixes[$prefix], $baseDir);
         }
     }
-    
+
     /**
-    * {@inheritdoc}
-    */
+     * {@inheritdoc}
+     */
     public function classExist($className)
     {
         $className = ltrim($className, '\\');
-        
-        if (isset($this->aliases[$className])) 
-        {
+
+        if (isset($this->aliases[$className])) {
             $className = $this->aliases[$className];
         }
 
-        if (isset($this->loaded[$className]))
-        {
+        if (isset($this->loaded[$className])) {
             return true;
         }
 
-        if (isset($this->classes[$className]))
-        {
+        if (isset($this->classes[$className])) {
             return true;
         }
 
         $paths = $this->paths($className);
 
-        foreach ($paths as $path)
-        {
-            if ($this->find($path)) 
-            {
+        foreach ($paths as $path) {
+            if ($this->find($path)) {
                 $this->classes[$className] = $path;
+
                 return true;
             }
         }
 
         return false;
     }
-    
+
     /**
      * {@inheritdoc}
      */
     public function findClass($className)
     {
         $className = ltrim($className, '\\');
-        
-        if (isset($this->aliases[$className])) 
-        {
+
+        if (isset($this->aliases[$className])) {
             $className = $this->aliases[$className];
         }
-        
-        if (isset($this->classes[$className]))
-        {
+
+        if (isset($this->classes[$className])) {
             return $this->classes[$className];
         }
 
         $paths = $this->paths($className);
-        
-        foreach ($paths as $path)
-        {
-            if ($this->find($path)) 
-            {
+
+        foreach ($paths as $path) {
+            if ($this->find($path)) {
                 $this->classes[$className] = $path;
+
                 return $path;
             }
         }
@@ -274,38 +257,35 @@ abstract class LoaderAbstract implements LoaderInterface, CacheableInterface
     /**
      * {@inheritdoc}
      */
-    public function loadClass($className) 
+    public function loadClass($className)
     {
         $className = ltrim($className, '\\');
-        
-        if (isset($this->aliases[$className])) 
-        {
+
+        if (isset($this->aliases[$className])) {
             $className = $this->aliases[$className];
         }
 
-        if (isset($this->loaded[$className]))
-        {
+        if (isset($this->loaded[$className])) {
             return true;
         }
 
-        if (isset($this->classes[$className]))
-        {
+        if (isset($this->classes[$className])) {
             $this->loaded[$className] = true;
 
             require_once $this->classes[$className];
+
             return true;
         }
 
         $paths = $this->paths($className);
-        
-        foreach ($paths as $path)
-        {
-            if ($this->find($path)) 
-            {
+
+        foreach ($paths as $path) {
+            if ($this->find($path)) {
                 $this->classes[$className] = $path;
                 $this->loaded[$className] = true;
 
                 require_once $path;
+
                 return true;
             }
         }
@@ -315,19 +295,17 @@ abstract class LoaderAbstract implements LoaderInterface, CacheableInterface
 
     /**
      * @param string $file
-     * @return boolean 
+     *
+     * @return bool
      */
-    protected function find($file) 
+    protected function find($file)
     {
-        if (file_exists($file)) 
-        {
+        if (file_exists($file)) {
             return true;
         }
 
-        foreach ($this->getIncludePaths() as $path) 
-        {
-            if (file_exists(rtrim($path, '/\\') . DIRECTORY_SEPARATOR . $file)) 
-            {
+        foreach ($this->getIncludePaths() as $path) {
+            if (file_exists(rtrim($path, '/\\').DIRECTORY_SEPARATOR.$file)) {
                 return true;
             }
         }
@@ -337,56 +315,54 @@ abstract class LoaderAbstract implements LoaderInterface, CacheableInterface
 
     /**
      * @param string $className
-     * @return array 
+     *
+     * @return array
      */
     abstract protected function paths($className);
-    
+
     /**
      * {@inheritdoc}
      */
     public function isFreshCache()
     {
-        if (!isset($this->cacheData['classes']))
-        {
+        if (!isset($this->cacheData['classes'])) {
             return false;
         }
-        
+
         return count(array_diff_assoc($this->cacheData['classes'], $this->classes)) === 0;
     }
-    
+
     /**
      * {@inheritdoc}
      */
     public function exportToCache()
     {
-        if (null !== $this->cache && !$this->isFreshCache())
-        {
+        if (null !== $this->cache && !$this->isFreshCache()) {
             $this->cache[$this->cacheKey] = [
                 'classes' => $this->classes,
-                'version' => $this->cacheVersion
+                'version' => $this->cacheVersion,
             ];
-            
+
             return true;
         }
-        
+
         return false;
     }
-    
+
     /**
      * {@inheritdoc}
      */
     public function invalidateCache()
     {
-        if (null !== $this->cache)
-        {
+        if (null !== $this->cache) {
             unset($this->cache[$this->cacheKey]);
-            
+
             $this->cacheLoaded = false;
             $this->cacheData = [];
-            
+
             return true;
         }
-        
+
         return false;
     }
 }
